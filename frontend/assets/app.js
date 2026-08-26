@@ -162,8 +162,6 @@
 
     renderToilets();
     renderTgsi();
-
-    map.on("click", () => closeDetail());
   }
 
   function venueIcon(flagged) {
