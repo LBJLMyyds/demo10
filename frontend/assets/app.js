@@ -1,39 +1,3 @@
-/* =========================================================================
-   EnAccessMap Melbourne — app.js
-   Vanilla JS, no build step. Fetches static JSON (exported from
-   accessibility.sqlite by export_frontend_data.py) and renders an
-   interactive Leaflet map with search, category + accessibility filters,
-   a venue detail panel, and a data-quality view.
-   ========================================================================= */
-(() => {
-  "use strict";
-
-  const DATA_BASE = "data/";
-  const MELBOURNE_CENTER = [-37.8136, 144.9631];
-
-  const FEATURES = [
-    { key: "ramp",     label: "Step-free entry",     short: "Step-free",  icon: "ramp" },
-    { key: "bathroom", label: "Accessible bathroom",  short: "Bathroom",   icon: "toilet" },
-    { key: "seating",  label: "Seating",              short: "Seating",   icon: "chair" },
-    { key: "parking",  label: "Accessible parking",   short: "Parking",   icon: "parking" },
-  ];
-  const FEATURE_BY_KEY = Object.fromEntries(FEATURES.map(f => [f.key, f]));
-
-  const CATEGORY_ICONS = {
-    cafe: "cup", bar: "glass", restaurant: "fork", culture: "ticket",
-    shopping: "bag", health: "cross", civic: "building", other: "dot",
-  };
-
-  /* ----------------------------- tiny icon set ---------------------------- */
-  const ICON_PATHS = {
-    ramp:     '<path d="M4 19h16M4 19 14 6h3v13M8 19l6-9" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/>',
-    toilet:   '<path d="M8 4v6a3 3 0 1 0 6 0V4M11 10v10M8 20h6" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"/><circle cx="17" cy="6" r="2" stroke="currentColor" stroke-width="1.5"/><path d="M17 9v4l2.4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>',
-    chair:    '<path d="M6 4v9a2 2 0 0 0 2 2h8a2 2 0 0 0 2-2V4M6 12H4v8M18 12h2v8M8 20v-3h8v3" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
-    parking:  '<rect x="4" y="4" width="16" height="16" rx="3" stroke="currentColor" stroke-width="1.6"/><path d="M9.5 16V8h3.2a2.4 2.4 0 0 1 0 4.8H9.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/>',
-    cup:      '<path d="M5 8h11v6a5.5 5.5 0 0 1-11 0V8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M16 9.5h1.5a2.5 2.5 0 0 1 0 5H16M4 21h13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-    glass:    '<path d="M7 4h10l-1 8.5a4 4 0 0 1-8 0L7 4Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M12 16.5V20M8.5 20h7" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>',
-    fork:     '<path d="M8 3v6a2 2 0 0 0 4 0V3M10 9v12M16 3c-1.4 0-2.5 2-2.5 5s1.1 4 2.5 4 2.5-1 2.5-4-1.1-5-2.5-5Zm0 9v9" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
-    ticket:   '<path d="M4 9a2 2 0 0 1 2-2h12a2 2 0 0 1 2 2 2 2 0 0 0 0 6 2 2 0 0 1-2 2H6a2 2 0 0 1-2-2 2 2 0 0 0 0-6Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M14 7.5v9" stroke="currentColor" stroke-width="1.4" stroke-dasharray="2 2"/>',
     bag:      '<path d="M6 8h12l-1 12H7L6 8Z" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round"/><path d="M9 8V6a3 3 0 0 1 6 0v2" stroke="currentColor" stroke-width="1.6"/>',
     cross:    '<path d="M12 4v16M4 12h16" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/>',
     building: '<path d="M5 21V6l7-3 7 3v15M5 21h14M9 10h2M13 10h2M9 14h2M13 14h2M9 21v-4h6v4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>',
